@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Intelligence — Ankara 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent: #4f8ef7;
+      --accent2: #7c5cbf;
+      --text: #e2e8f0;
+      --muted: #8892a4;
+      --low: #38a169;
+      --medium: #d69e2e;
+      --high: #e53e3e;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    header .logo span { color: var(--accent); }
+    header .subtitle { color: var(--muted); font-size: 13px; }
+    header .refresh-btn {
+      margin-left: auto;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    header .refresh-btn:hover { opacity: 0.85; }
+    header .refresh-btn:disabled { opacity: 0.5; cursor: default; }
+
+    /* ── Stats bar ── */
+    #stats-bar {
+      display: flex;
+      gap: 12px;
+      padding: 14px 24px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 18px;
+      min-width: 130px;
+      flex: 1;
+    }
+    .stat-card .count { font-size: 26px; font-weight: 700; color: var(--accent); }
+    .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    /* ── Main layout ── */
+    .layout {
+      display: flex;
+      height: calc(100vh - 115px);
+    }
+
+    /* ── Sidebar tabs ── */
+    aside {
+      width: 200px;
+      min-width: 200px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 12px 8px;
+      overflow-y: auto;
+    }
+    aside h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 4px 10px 10px; }
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      text-align: left;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 2px;
+    }
+    .tab-btn:hover { background: var(--surface2); color: var(--text); }
+    .tab-btn.active { background: var(--surface2); color: var(--accent); font-weight: 600; }
+    .tab-btn .icon { font-size: 16px; }
+    .tab-btn .badge {
+      margin-left: auto;
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+    .tab-btn.active .badge { background: var(--accent); color: #fff; }
+
+    /* ── Content pane ── */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    .pane { display: none; }
+    .pane.active { display: block; }
+
+    /* ── Search / filter bar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 9px 14px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--muted); }
+
+    /* ── Cards ── */
+    .cards { display: flex; flex-direction: column; gap: 12px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      transition: border-color 0.15s;
+    }
+    .card:hover { border-color: var(--accent); }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--accent2);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+      color: #fff;
+    }
+    .card-meta { flex: 1; }
+    .card-title { font-weight: 600; font-size: 15px; }
+    .card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .badge-urg {
+      padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;
+    }
+    .badge-low  { background: rgba(56,161,105,.2); color: #68d391; }
+    .badge-medium { background: rgba(214,158,46,.2); color: #f6c90e; }
+    .badge-high { background: rgba(229,62,62,.2); color: #fc8181; }
+
+    .card-body { font-size: 14px; line-height: 1.6; color: var(--text); }
+    .card-body .message-text {
+      background: var(--surface2);
+      border-left: 3px solid var(--accent2);
+      padding: 8px 12px;
+      border-radius: 0 6px 6px 0;
+      margin: 8px 0;
+      font-style: italic;
+    }
+
+    .card-footer {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .meta-item .ico { font-size: 13px; }
+
+    /* ── Empty / loading ── */
+    .loading, .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Event<span>Intel</span></div>
+    <div class="subtitle">Ankara 2026 — Field Data Dashboard</div>
+  </div>
+  <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+</header>
+
+<div id="stats-bar">
+  <div class="stat-card"><div class="count" id="s-checkins">—</div><div class="label">Check-ins</div></div>
+  <div class="stat-card"><div class="count" id="s-messages">—</div><div class="label">Messages</div></div>
+  <div class="stat-card"><div class="count" id="s-sightings">—</div><div class="label">Sightings</div></div>
+  <div class="stat-card"><div class="count" id="s-notes">—</div><div class="label">Personal Notes</div></div>
+  <div class="stat-card"><div class="count" id="s-tips">—</div><div class="label">Anonymous Tips</div></div>
+</div>
+
+<div class="layout">
+  <aside>
+    <h3>Forms</h3>
+    <button class="tab-btn active" onclick="switchTab('checkins', this)">
+      <span class="icon">📍</span> Check-ins <span class="badge" id="b-checkins">…</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('messages', this)">
+      <span class="icon">💬</span> Messages <span class="badge" id="b-messages">…</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('sightings', this)">
+      <span class="icon">👁</span> Sightings <span class="badge" id="b-sightings">…</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('notes', this)">
+      <span class="icon">📝</span> Notes <span class="badge" id="b-notes">…</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('tips', this)">
+      <span class="icon">🔎</span> Anon Tips <span class="badge" id="b-tips">…</span>
+    </button>
+  </aside>
+
+  <main>
+    <div id="pane-checkins" class="pane active">
+      <div class="toolbar">
+        <input class="search-input" placeholder="Search check-ins…" oninput="filterCards('checkins', this.value)" />
+      </div>
+      <div class="cards" id="cards-checkins"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+    </div>
+
+    <div id="pane-messages" class="pane">
+      <div class="toolbar">
+        <input class="search-input" placeholder="Search messages…" oninput="filterCards('messages', this.value)" />
+      </div>
+      <div class="cards" id="cards-messages"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+    </div>
+
+    <div id="pane-sightings" class="pane">
+      <div class="toolbar">
+        <input class="search-input" placeholder="Search sightings…" oninput="filterCards('sightings', this.value)" />
+      </div>
+      <div class="cards" id="cards-sightings"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+    </div>
+
+    <div id="pane-notes" class="pane">
+      <div class="toolbar">
+        <input class="search-input" placeholder="Search notes…" oninput="filterCards('notes', this.value)" />
+      </div>
+      <div class="cards" id="cards-notes"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+    </div>
+
+    <div id="pane-tips" class="pane">
+      <div class="toolbar">
+        <input class="search-input" placeholder="Search tips…" oninput="filterCards('tips', this.value)" />
+      </div>
+      <div class="cards" id="cards-tips"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const API_KEY = 'ad39735f1449a6dc28d60e0921352665';
+  const BASE = 'https://api.jotform.com';
+
+  const FORMS = {
+    checkins:  { id: '261065067494966',  label: 'Checkins' },
+    messages:  { id: '261065765723966',  label: 'Messages' },
+    sightings: { id: '261065244786967',  label: 'Sightings' },
+    notes:     { id: '261065509008958',  label: 'Personal Notes' },
+    tips:      { id: '261065875889981',  label: 'Anonymous Tips' },
+  };
+
+  // keyed by form slug → array of raw cards (rendered HTML strings)
+  const cache = {};
+
+  function initials(name) {
+    if (!name) return '?';
+    return name.trim().split(/\s+/).map(p => p[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  function badgeHtml(level) {
+    if (!level) return '';
+    const cls = level.toLowerCase();
+    return `<span class="badge-urg badge-${cls}">${level}</span>`;
+  }
+
+  function metaHtml(icon, text) {
+    if (!text) return '';
+    return `<span class="meta-item"><span class="ico">${icon}</span>${text}</span>`;
+  }
+
+  function mapAnswers(answers, questions) {
+    const out = {};
+    for (const qid in answers) {
+      const qName = questions[qid]?.name || qid;
+      const val = answers[qid]?.answer ?? answers[qid];
+      if (val !== undefined && val !== null && val !== '') out[qName] = val;
+    }
+    return out;
+  }
+
+  function buildCheckinCard(data) {
+    const name = data.personName || data.name || '—';
+    return `
+      <div class="card" data-search="${(name + data.location + data.note).toLowerCase()}">
+        <div class="card-header">
+          <div class="avatar">${initials(name)}</div>
+          <div class="card-meta">
+            <div class="card-title">${name}</div>
+            <div class="card-sub">Check-in</div>
+          </div>
+        </div>
+        <div class="card-body">${data.note || ''}</div>
+        <div class="card-footer">
+          ${metaHtml('🕐', data.timestamp)}
+          ${metaHtml('📍', data.location)}
+          ${data.coordinates ? metaHtml('🗺', `<a href="https://maps.google.com/?q=${encodeURIComponent(data.coordinates)}" target="_blank" style="color:var(--accent);text-decoration:none">${data.coordinates}</a>`) : ''}
+        </div>
+      </div>`;
+  }
+
+  function buildMessageCard(data) {
+    const sender = data.senderName || data.sender || '—';
+    const recipient = data.recipientName || data.recipient || '—';
+    const urgency = (data.urgency || '').toLowerCase();
+    const text = data.text || data.message || '';
+    return `
+      <div class="card" data-search="${(sender + recipient + text + data.location).toLowerCase()}">
+        <div class="card-header">
+          <div class="avatar" style="background:var(--accent)">${initials(sender)}</div>
+          <div class="card-meta">
+            <div class="card-title">${sender} → ${recipient}</div>
+            <div class="card-sub">Message</div>
+          </div>
+          ${badgeHtml(urgency)}
+        </div>
+        <div class="card-body">
+          <div class="message-text">${text}</div>
+        </div>
+        <div class="card-footer">
+          ${metaHtml('🕐', data.timestamp)}
+          ${metaHtml('📍', data.location)}
+          ${data.coordinates ? metaHtml('🗺', `<a href="https://maps.google.com/?q=${encodeURIComponent(data.coordinates)}" target="_blank" style="color:var(--accent);text-decoration:none">${data.coordinates}</a>`) : ''}
+        </div>
+      </div>`;
+  }
+
+  function buildSightingCard(data) {
+    const person = data.personName || data.person || '—';
+    const seenWith = data.seenWith || '—';
+    return `
+      <div class="card" data-search="${(person + seenWith + data.location + (data.note||'')).toLowerCase()}">
+        <div class="card-header">
+          <div class="avatar" style="background:#2b6cb0">${initials(person)}</div>
+          <div class="card-meta">
+            <div class="card-title">${person}</div>
+            <div class="card-sub">Seen with: <strong>${seenWith}</strong></div>
+          </div>
+        </div>
+        <div class="card-body">${data.note || ''}</div>
+        <div class="card-footer">
+          ${metaHtml('🕐', data.timestamp)}
+          ${metaHtml('📍', data.location)}
+          ${data.coordinates ? metaHtml('🗺', `<a href="https://maps.google.com/?q=${encodeURIComponent(data.coordinates)}" target="_blank" style="color:var(--accent);text-decoration:none">${data.coordinates}</a>`) : ''}
+        </div>
+      </div>`;
+  }
+
+  function buildNoteCard(data) {
+    const author = data.authorName || data.author || '—';
+    const mentioned = Array.isArray(data.mentionedPeople)
+      ? data.mentionedPeople.join(', ')
+      : (data.mentionedPeople || '');
+    return `
+      <div class="card" data-search="${(author + (data.note||'') + data.location).toLowerCase()}">
+        <div class="card-header">
+          <div class="avatar" style="background:#2d6a4f">${initials(author)}</div>
+          <div class="card-meta">
+            <div class="card-title">${author}</div>
+            <div class="card-sub">Personal Note</div>
+          </div>
+        </div>
+        <div class="card-body">${data.note || ''}</div>
+        <div class="card-footer">
+          ${metaHtml('🕐', data.timestamp)}
+          ${metaHtml('📍', data.location)}
+          ${mentioned ? metaHtml('👤', mentioned) : ''}
+          ${data.coordinates ? metaHtml('🗺', `<a href="https://maps.google.com/?q=${encodeURIComponent(data.coordinates)}" target="_blank" style="color:var(--accent);text-decoration:none">${data.coordinates}</a>`) : ''}
+        </div>
+      </div>`;
+  }
+
+  function buildTipCard(data) {
+    const answers = data.answers || data;
+    const suspect = answers.suspectName || answers['suspectName'] || '—';
+    const tip = answers.tip || answers['tip'] || '';
+    const confidence = (answers.confidence || '').toLowerCase();
+    const location = answers.location || '';
+    const timestamp = answers.timestamp || '';
+    const coords = answers.coordinates || '';
+    return `
+      <div class="card" data-search="${(suspect + tip + location).toLowerCase()}">
+        <div class="card-header">
+          <div class="avatar" style="background:#742a2a">${initials(suspect)}</div>
+          <div class="card-meta">
+            <div class="card-title">Suspect: ${suspect}</div>
+            <div class="card-sub">Anonymous Tip</div>
+          </div>
+          ${badgeHtml(confidence)}
+        </div>
+        <div class="card-body">${tip}</div>
+        <div class="card-footer">
+          ${metaHtml('🕐', timestamp)}
+          ${metaHtml('📍', location)}
+          ${coords ? metaHtml('🗺', `<a href="https://maps.google.com/?q=${encodeURIComponent(coords)}" target="_blank" style="color:var(--accent);text-decoration:none">${coords}</a>`) : ''}
+        </div>
+      </div>`;
+  }
+
+  const BUILDERS = {
+    checkins:  buildCheckinCard,
+    messages:  buildMessageCard,
+    sightings: buildSightingCard,
+    notes:     buildNoteCard,
+    tips:      buildTipCard,
+  };
+
+  const STAT_IDS = {
+    checkins: 's-checkins',
+    messages: 's-messages',
+    sightings: 's-sightings',
+    notes: 's-notes',
+    tips: 's-tips',
+  };
+  const BADGE_IDS = {
+    checkins: 'b-checkins',
+    messages: 'b-messages',
+    sightings: 'b-sightings',
+    notes: 'b-notes',
+    tips: 'b-tips',
+  };
+
+  async function fetchForm(slug) {
+    const { id } = FORMS[slug];
+    const [qRes, sRes] = await Promise.all([
+      fetch(`${BASE}/form/${id}/questions?apiKey=${API_KEY}`).then(r => r.json()),
+      fetch(`${BASE}/form/${id}/submissions?apiKey=${API_KEY}&limit=100&orderby=created_at,DESC`).then(r => r.json()),
+    ]);
+
+    const questions = qRes.content || {};
+    const submissions = sRes.content || [];
+
+    return submissions.map(sub => {
+      const mapped = mapAnswers(sub.answers || {}, questions);
+      return { ...mapped, _id: sub.id, _created: sub.created_at };
+    });
+  }
+
+  async function loadForm(slug) {
+    const container = document.getElementById(`cards-${slug}`);
+    container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
+    try {
+      const rows = await fetchForm(slug);
+      cache[slug] = rows;
+      const count = rows.length;
+      document.getElementById(STAT_IDS[slug]).textContent = count;
+      document.getElementById(BADGE_IDS[slug]).textContent = count;
+      renderCards(slug, rows);
+    } catch (e) {
+      container.innerHTML = `<div class="empty">⚠️ Failed to load: ${e.message}</div>`;
+    }
+  }
+
+  function renderCards(slug, rows) {
+    const container = document.getElementById(`cards-${slug}`);
+    if (!rows.length) {
+      container.innerHTML = '<div class="empty">No submissions found.</div>';
+      return;
+    }
+    container.innerHTML = rows.map(BUILDERS[slug]).join('');
+  }
+
+  function filterCards(slug, query) {
+    const rows = cache[slug] || [];
+    const q = query.toLowerCase().trim();
+    if (!q) { renderCards(slug, rows); return; }
+    const filtered = rows.filter(r => {
+      const text = Object.values(r).join(' ').toLowerCase();
+      return text.includes(q);
+    });
+    renderCards(slug, filtered);
+    if (filtered.length === 0) {
+      document.getElementById(`cards-${slug}`).innerHTML = '<div class="empty">No results for that search.</div>';
+    }
+  }
+
+  function switchTab(slug, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`pane-${slug}`).classList.add('active');
+  }
+
+  async function loadAll() {
+    const btn = document.getElementById('refresh-btn');
+    btn.disabled = true;
+    btn.textContent = '↻ Loading…';
+    await Promise.all(Object.keys(FORMS).map(slug => loadForm(slug)));
+    btn.disabled = false;
+    btn.textContent = '↻ Refresh';
+  }
+
+  loadAll();
+</script>
+</body>
+</html>
