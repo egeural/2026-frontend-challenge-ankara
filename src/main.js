@@ -7,7 +7,6 @@ import { BUILDERS } from './components/cards.js';
 import { initMap, rebuildMap, focusEvent, addTileLayer } from './components/map.js';
 import { extractEvent, parseTimestamp, timeHHMM } from './utils/events.js';
 import { state } from './state.js';
-import { openGame } from './components/game.js';
 
 // ── Window exports ─────────────────────────────────────────────
 window.focusEvent   = focusEvent;
@@ -16,7 +15,6 @@ window.loadAll      = loadAll;
 window.closeSidebar = closeSidebar;
 window.toggleLevel  = toggleLevel;
 window.toggleType   = toggleType;
-window.openGame     = openGame;
 
 // ── ID maps ───────────────────────────────────────────────────
 const STAT_IDS  = { checkins:'s-checkins', messages:'s-messages', sightings:'s-sightings', notes:'s-notes', tips:'s-tips' };
