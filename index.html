@@ -61,6 +61,11 @@
     <button class="tab-btn" onclick="switchTab('map', this)">
       <span class="icon">🗺</span> Map View
     </button>
+    <div class="sidebar-divider"></div>
+    <button class="tab-btn wordle-sidebar-btn" onclick="openWordle()">
+      <span class="icon">🟩</span> Podo-rdle
+      <span class="badge wordle-badge">🐱</span>
+    </button>
   </aside>
 
   <div id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -246,6 +251,13 @@
   <button class="mnav-btn" onclick="switchTab('all', this)" data-tab="all"><span>📋</span><span>All</span></button>
   <button class="mnav-btn" onclick="switchTab('map', this)" data-tab="map"><span>🗺</span><span>Map</span></button>
 </nav>
+
+<div id="wordle-modal" class="wordle-modal" aria-hidden="true" onclick="if(event.target===this)closeWordle()">
+  <div class="wordle-panel" role="dialog" aria-modal="true" aria-label="Podo-rdle game">
+    <button class="wordle-close" onclick="closeWordle()" aria-label="Close Podo-rdle">×</button>
+    <div id="wordle-content"></div>
+  </div>
+</div>
 
 <div id="investigation-modal" class="investigation-modal" aria-hidden="true">
   <div class="investigation-panel" role="dialog" aria-modal="true" aria-labelledby="investigation-title">

@@ -7,6 +7,7 @@ import { BUILDERS } from './components/cards.js';
 import { initMap, rebuildMap, focusEvent, addTileLayer } from './components/map.js';
 import { extractEvent, parseTimestamp, timeHHMM } from './utils/events.js';
 import { buildInvestigationGame } from './utils/investigation.js';
+import { initWordle, wordleKey, handleWordleKeydown } from './utils/wordle.js';
 import { state } from './state.js';
 
 // ── Window exports ─────────────────────────────────────────────
@@ -21,6 +22,10 @@ window.closeInvestigation = closeInvestigation;
 window.selectSuspect = selectSuspect;
 window.submitSuspectGuess = submitSuspectGuess;
 window.resetInvestigation = resetInvestigation;
+window.openWordle = openWordle;
+window.closeWordle = closeWordle;
+window.wordleKey = wordleKey;
+window.initWordle = initWordle;
 
 // ── ID maps ───────────────────────────────────────────────────
 const STAT_IDS  = { checkins:'s-checkins', messages:'s-messages', sightings:'s-sightings', notes:'s-notes', tips:'s-tips' };
@@ -466,6 +471,24 @@ document.getElementById('burger').addEventListener('click', () => {
 document.getElementById('investigation-modal').addEventListener('click', e => {
   if (e.target.id === 'investigation-modal') closeInvestigation();
 });
+
+// ── Wordle modal ──────────────────────────────────────────────
+function openWordle() {
+  const modal = document.getElementById('wordle-modal');
+  modal.classList.add('active');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  initWordle();
+}
+
+function closeWordle() {
+  const modal = document.getElementById('wordle-modal');
+  modal.classList.remove('active');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', handleWordleKeydown);
 
 export function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');

@@ -1159,3 +1159,168 @@ main {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Sidebar divider & Wordle button ── */
+.sidebar-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 10px 8px 8px;
+}
+.wordle-sidebar-btn {
+  background: linear-gradient(90deg, rgba(34,197,94,0.12), transparent);
+  color: var(--text);
+  border-left: 3px solid #22c55e;
+  padding-left: 9px;
+}
+.wordle-sidebar-btn:hover {
+  background: linear-gradient(90deg, rgba(34,197,94,0.22), transparent);
+  color: var(--text);
+}
+.wordle-badge { background: transparent !important; border: none !important; }
+
+/* ── Wordle modal ── */
+.wordle-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 9, 33, 0.72);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1200;
+}
+.wordle-modal.active { display: flex; }
+.wordle-panel {
+  width: min(420px, 100%);
+  max-height: min(92vh, 700px);
+  overflow-y: auto;
+  background: linear-gradient(180deg, var(--surface), var(--surface2));
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: 0 22px 80px rgba(0,0,0,0.45);
+  padding: 24px 20px 28px;
+  position: relative;
+}
+.wordle-close {
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Wordle game internals ── */
+.w-title {
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.w-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+.w-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 8px 0 12px;
+  font-style: italic;
+}
+.w-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  margin: 12px 0;
+}
+.w-row { display: flex; gap: 6px; }
+.w-cell {
+  width: 52px; height: 52px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text);
+  background: var(--surface2);
+  transition: border-color 0.1s, background 0.3s, transform 0.1s;
+}
+.w-cell.filled { border-color: var(--accent); transform: scale(1.05); }
+.w-cell.correct { background: #22c55e; border-color: #22c55e; color: #fff; }
+.w-cell.present { background: #eab308; border-color: #eab308; color: #fff; }
+.w-cell.absent  { background: var(--surface); border-color: var(--border); color: var(--muted); }
+
+.w-keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  margin-top: 14px;
+}
+.w-kb-row { display: flex; gap: 5px; }
+.w-key {
+  height: 44px;
+  min-width: 32px;
+  padding: 0 4px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.w-key:hover { background: var(--surface); }
+.w-key.wide { min-width: 56px; font-size: 11px; }
+.w-key.correct { background: #22c55e; border-color: #22c55e; color: #fff; }
+.w-key.present { background: #eab308; border-color: #eab308; color: #fff; }
+.w-key.absent  { background: var(--surface); color: var(--muted); border-color: var(--border); }
+
+.w-status {
+  text-align: center;
+  margin: 8px 0 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1.5px solid;
+}
+.w-win  { background: rgba(34,197,94,0.12); border-color: #22c55e; }
+.w-lose { background: rgba(239,68,68,0.1); border-color: #ef4444; }
+.w-status-msg { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+.w-answer { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.w-answer strong { color: var(--text); }
+.w-play-again {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.w-play-again:hover { opacity: 0.88; }
+.w-error {
+  text-align: center;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 20px;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
