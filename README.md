@@ -1,15 +1,54 @@
 # Jotform Frontend Challenge Project
 
 ## User Information
-Please fill in your information after forking this repository:
 
-- **Name**: [Your Name]
+- **Name**: Ege Ural
 
 ## Project Description
-[Add a brief description of your project here]
+
+A frontend web application built for the 2026 Jotform Frontend Challenge (Ankara). The app features an interactive investigation/quiz system with a map interface, game logic, and event filtering — built with vanilla JavaScript and Vite.
 
 ## Getting Started
-[Add instructions for setting up and running the project]
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- npm (comes with Node.js)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/egeural/2026-frontend-challenge-ankara.git
+   cd 2026-frontend-challenge-ankara
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Running the Project
+
+Start the development server:
+```bash
+npm run dev
+```
+
+Then open your browser and navigate to `http://localhost:5173`.
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+Preview the production build:
+```bash
+npm run preview
+```
+
+---
 
 # 🚀 Challenge Duyurusu
 
@@ -17,7 +56,7 @@ Please fill in your information after forking this repository:
 Cumartesi günü başlama saatinden itibaren üç saattir.
 
 ## 🎯 Challenge Konsepti
-Bu challenge'da, size özel hazırlanmış bir senaryo üzerine web uygulaması geliştirmeniz istenecektir. Challenge başlangıcında senaryo detayları paylaşılacaktır.Katılımcılar, verilen GitHub reposunu fork ederek kendi geliştirme ortamlarını oluşturacaklardır.
+Bu challenge'da, size özel hazırlanmış bir senaryo üzerine web uygulaması geliştirmeniz istenecektir. Challenge başlangıcında senaryo detayları paylaşılacaktır. Katılımcılar, verilen GitHub reposunu fork ederek kendi geliştirme ortamlarını oluşturacaklardır.
 
 ## 📦 GitHub Reposu
 Challenge için kullanılacak repo: https://github.com/cemjotform/2026-frontend-challenge-ankara
