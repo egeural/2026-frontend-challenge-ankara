@@ -14,8 +14,10 @@ window.loadAll      = loadAll;
 window.filterCards  = filterCards;
 window.closeSidebar = closeSidebar;
 
-// ── Stat/badge ID maps ────────────────────────────────────────
+// ── ID maps ───────────────────────────────────────────────────
+// s-* = big dashboard stat numbers, dbn-* = nav card counts, b-* = sidebar badges
 const STAT_IDS  = { checkins:'s-checkins', messages:'s-messages', sightings:'s-sightings', notes:'s-notes', tips:'s-tips' };
+const CARD_IDS  = { checkins:'dbn-checkins', messages:'dbn-messages', sightings:'dbn-sightings', notes:'dbn-notes', tips:'dbn-tips' };
 const BADGE_IDS = { checkins:'b-checkins', messages:'b-messages', sightings:'b-sightings', notes:'b-notes', tips:'b-tips' };
 
 // ── Card rendering ────────────────────────────────────────────
@@ -40,8 +42,10 @@ async function loadForm(slug) {
   try {
     const rows = await fetchFormData(FORMS[slug]);
     state.cache[slug] = rows;
-    document.getElementById(STAT_IDS[slug]).textContent  = rows.length;
-    document.getElementById(BADGE_IDS[slug]).textContent = rows.length;
+    const n = rows.length;
+    document.getElementById(STAT_IDS[slug]).textContent  = n;
+    document.getElementById(BADGE_IDS[slug]).textContent = n;
+    document.getElementById(CARD_IDS[slug]).textContent  = n;
     renderCards(slug, rows);
   } catch (e) {
     el.innerHTML = `<div class="empty">⚠️ ${e.message}</div>`;
@@ -71,7 +75,7 @@ export function switchTab(slug, btn) {
     b.classList.toggle('active', b.dataset.tab === slug);
   });
   // mark the clicked sidebar btn active (if it's a sidebar btn)
-  if (btn.classList.contains('tab-btn')) btn.classList.add('active');
+  if (btn && btn.classList && btn.classList.contains('tab-btn')) btn.classList.add('active');
 
   // panes
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
