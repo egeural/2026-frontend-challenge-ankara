@@ -7,12 +7,16 @@ import { BUILDERS } from './components/cards.js';
 import { initMap, rebuildMap, focusEvent, addTileLayer } from './components/map.js';
 import { extractEvent, parseTimestamp, timeHHMM } from './utils/events.js';
 import { state } from './state.js';
+import { openGame } from './components/game.js';
 
-// ── Window exports ────────────────────────────────────────────
+// ── Window exports ─────────────────────────────────────────────
 window.focusEvent   = focusEvent;
 window.switchTab    = switchTab;
 window.loadAll      = loadAll;
 window.closeSidebar = closeSidebar;
+window.toggleLevel  = toggleLevel;
+window.toggleType   = toggleType;
+window.openGame     = openGame;
 
 // ── ID maps ───────────────────────────────────────────────────
 const STAT_IDS  = { checkins:'s-checkins', messages:'s-messages', sightings:'s-sightings', notes:'s-notes', tips:'s-tips' };
@@ -20,54 +24,97 @@ const CARD_IDS  = { checkins:'dbn-checkins', messages:'dbn-messages', sightings:
 const BADGE_IDS = { checkins:'b-checkins', messages:'b-messages', sightings:'b-sightings', notes:'b-notes', tips:'b-tips' };
 
 // ── Filter state per slug ─────────────────────────────────────
-const filters = {};
-Object.keys(FORMS).forEach(s => { filters[s] = { query: '', location: '', level: '' }; });
-filters.all = { query: '', type: '', location: '' };
+function freshFilters() {
+  const f = {};
+  Object.keys(FORMS).forEach(s => { f[s] = { query: '', location: '', levels: [], sort: 'time-asc' }; });
+  f.all = { query: '', types: [], location: '', sort: 'time-asc' };
+  return f;
+}
+let filters = freshFilters();
+
+// ── Sort helpers ──────────────────────────────────────────────
+function getNameField(slug, r) {
+  if (slug === 'checkins')  return r.personName || '';
+  if (slug === 'messages')  return r.senderName || '';
+  if (slug === 'sightings') return r.personName || '';
+  if (slug === 'notes')     return r.authorName || '';
+  if (slug === 'tips')      return r.suspectName || '';
+  return '';
+}
+
+function sortRows(slug, rows, key) {
+  const s = [...rows];
+  if (key === 'time-asc')  return s.sort((a,b) => parseTimestamp(a.timestamp||'') - parseTimestamp(b.timestamp||''));
+  if (key === 'time-desc') return s.sort((a,b) => parseTimestamp(b.timestamp||'') - parseTimestamp(a.timestamp||''));
+  if (key === 'name-asc')  return s.sort((a,b) => getNameField(slug,a).localeCompare(getNameField(slug,b)));
+  if (key === 'name-desc') return s.sort((a,b) => getNameField(slug,b).localeCompare(getNameField(slug,a)));
+  return s;
+}
 
 // ── Apply filters & re-render ─────────────────────────────────
 function applyFilters(slug) {
   if (slug === 'all') { renderAll(); return; }
   const f = filters[slug];
-  const rows = (state.cache[slug] || []).filter(r => {
-    const txt  = Object.values(r).join(' ').toLowerCase();
-    const loc  = (r.location || r.coordinates || '').toLowerCase();
-    const lvl  = (r.urgency || r.confidence || '').toLowerCase();
+  let rows = (state.cache[slug] || []).filter(r => {
+    const txt = Object.values(r).join(' ').toLowerCase();
+    const loc = (r.location || r.coordinates || '').toLowerCase();
+    const lvl = (r.urgency || r.confidence || '').toLowerCase();
     if (f.query    && !txt.includes(f.query.toLowerCase()))    return false;
     if (f.location && !loc.includes(f.location.toLowerCase())) return false;
-    if (f.level    && lvl !== f.level)                         return false;
+    if (f.levels.length && !f.levels.includes(lvl))           return false;
     return true;
   });
+  rows = sortRows(slug, rows, f.sort);
   const el = document.getElementById(`cards-${slug}`);
   if (!rows.length) { el.innerHTML = '<div class="empty">No results for these filters.</div>'; return; }
   el.innerHTML = rows.map(BUILDERS[slug]).join('');
 }
 
-// ── Build filter bar after data loads ─────────────────────────
+// ── Multi-select level chip toggle ────────────────────────────
+function toggleLevel(slug, val) {
+  const f = filters[slug];
+  const i = f.levels.indexOf(val);
+  if (i === -1) f.levels.push(val); else f.levels.splice(i, 1);
+  document.getElementById(`filter-bar-${slug}`)
+    ?.querySelectorAll('.chip[data-level]')
+    .forEach(c => c.classList.toggle('active', f.levels.includes(c.dataset.level)));
+  applyFilters(slug);
+}
+
+// ── Type chip toggle (all pane) ───────────────────────────────
+function toggleType(val) {
+  const f = filters.all;
+  if (val === '') {
+    f.types = [];
+  } else {
+    const i = f.types.indexOf(val);
+    if (i === -1) f.types.push(val); else f.types.splice(i, 1);
+  }
+  const bar = document.getElementById('filter-bar-all');
+  if (bar) {
+    bar.querySelectorAll('.chip[data-type]').forEach(c => {
+      const v = c.dataset.type;
+      c.classList.toggle('active', v === '' ? f.types.length === 0 : f.types.includes(v));
+    });
+  }
+  renderAll();
+}
+
+// ── Build filter bar (built once after data loads) ────────────
 function buildFilterBar(slug) {
   const bar = document.getElementById(`filter-bar-${slug}`);
-  if (!bar) return;
+  if (!bar || bar.dataset.built) return;
+  bar.dataset.built = '1';
+
   const rows = state.cache[slug] || [];
-
-  // unique locations
   const locs = [...new Set(rows.map(r => r.location).filter(Boolean))].sort();
-  const locOptions = locs.map(l => `<option value="${l}">${l}</option>`).join('');
 
-  // level chips: messages=urgency, tips=confidence
-  let levelChips = '';
-  if (slug === 'messages') {
-    levelChips = `<div class="chip-group">
-      ${['', 'low', 'medium', 'high'].map(v => `
-        <button class="chip${filters[slug].level === v ? ' active' : ''}" onclick="setFilter('${slug}','level','${v}')">
-          ${v || 'All'}
-        </button>`).join('')}
-    </div>`;
-  }
-  if (slug === 'tips') {
-    levelChips = `<div class="chip-group">
-      ${['', 'low', 'medium', 'high'].map(v => `
-        <button class="chip${filters[slug].level === v ? ' active' : ''}" onclick="setFilter('${slug}','level','${v}')">
-          ${v || 'All'}
-        </button>`).join('')}
+  let levelHtml = '';
+  if (slug === 'messages' || slug === 'tips') {
+    levelHtml = `<div class="chip-group">
+      ${['low','medium','high'].map(v => `
+        <button class="chip" data-level="${v}" onclick="toggleLevel('${slug}','${v}')">${v[0].toUpperCase()+v.slice(1)}</button>
+      `).join('')}
     </div>`;
   }
 
@@ -75,69 +122,93 @@ function buildFilterBar(slug) {
     <div class="filter-row">
       <div class="filter-search-wrap">
         <span class="filter-icon">🔍</span>
-        <input class="search-input" placeholder="Search by name, note, text…"
-          value="${filters[slug].query}"
-          oninput="setFilter('${slug}','query',this.value)" />
+        <input class="search-input filter-query" placeholder="Search by name, location, note…" />
       </div>
       ${locs.length ? `
       <div class="filter-select-wrap">
         <span class="filter-icon">📍</span>
-        <select class="filter-select" onchange="setFilter('${slug}','location',this.value)">
+        <select class="filter-select filter-loc">
           <option value="">All Locations</option>
-          ${locOptions}
+          ${locs.map(l => `<option value="${l}">${l}</option>`).join('')}
         </select>
       </div>` : ''}
-      ${levelChips}
+      <div class="filter-select-wrap">
+        <span class="filter-icon">↕</span>
+        <select class="filter-select filter-sort">
+          <option value="time-asc">Time ↑</option>
+          <option value="time-desc">Time ↓</option>
+          <option value="name-asc">Name A–Z</option>
+          <option value="name-desc">Name Z–A</option>
+        </select>
+      </div>
+      ${levelHtml}
     </div>`;
+
+  bar.querySelector('.filter-query').addEventListener('input', e => {
+    filters[slug].query = e.target.value;
+    applyFilters(slug);
+  });
+  bar.querySelector('.filter-loc')?.addEventListener('change', e => {
+    filters[slug].location = e.target.value;
+    applyFilters(slug);
+  });
+  bar.querySelector('.filter-sort').addEventListener('change', e => {
+    filters[slug].sort = e.target.value;
+    applyFilters(slug);
+  });
 }
 
 function buildAllFilterBar() {
   const bar = document.getElementById('filter-bar-all');
-  if (!bar) return;
+  if (!bar || bar.dataset.built) return;
+  bar.dataset.built = '1';
 
   const allLocs = [...new Set(
     Object.keys(FORMS).flatMap(s => (state.cache[s] || []).map(r => r.location).filter(Boolean))
   )].sort();
 
-  const formChips = [
-    { val: '', label: 'All' },
-    ...Object.entries(FORMS).map(([s, f]) => ({ val: s, label: f.label })),
-  ];
-
   bar.innerHTML = `
     <div class="filter-row">
       <div class="filter-search-wrap">
         <span class="filter-icon">🔍</span>
-        <input class="search-input" placeholder="Search across all events…"
-          value="${filters.all.query}"
-          oninput="setFilter('all','query',this.value)" />
+        <input class="search-input filter-query" placeholder="Search across all events…" />
       </div>
       ${allLocs.length ? `
       <div class="filter-select-wrap">
         <span class="filter-icon">📍</span>
-        <select class="filter-select" onchange="setFilter('all','location',this.value)">
+        <select class="filter-select filter-loc">
           <option value="">All Locations</option>
           ${allLocs.map(l => `<option value="${l}">${l}</option>`).join('')}
         </select>
       </div>` : ''}
+      <div class="filter-select-wrap">
+        <span class="filter-icon">↕</span>
+        <select class="filter-select filter-sort">
+          <option value="time-asc">Time ↑</option>
+          <option value="time-desc">Time ↓</option>
+        </select>
+      </div>
       <div class="chip-group">
-        ${formChips.map(({ val, label }) => `
-          <button class="chip${filters.all.type === val ? ' active' : ''}"
-            style="${val ? `--chip-c:${FORMS[val]?.color}` : ''}"
-            onclick="setFilter('all','type','${val}')">
-            ${label}
-          </button>`).join('')}
+        <button class="chip active" data-type="" onclick="toggleType('')">All</button>
+        ${Object.entries(FORMS).map(([s, f]) => `
+          <button class="chip" data-type="${s}" style="--chip-c:${f.color}" onclick="toggleType('${s}')">${f.label}</button>
+        `).join('')}
       </div>
     </div>`;
-}
 
-// ── Set a filter value and re-render ──────────────────────────
-window.setFilter = function(slug, key, val) {
-  filters[slug][key] = val;
-  buildFilterBar(slug);      // rebuild to refresh chip active states
-  if (slug === 'all') { buildAllFilterBar(); renderAll(); }
-  else applyFilters(slug);
-};
+  bar.querySelector('.filter-query').addEventListener('input', e => {
+    filters.all.query = e.target.value;
+    renderAll();
+  });
+  bar.querySelector('.filter-loc')?.addEventListener('change', e => {
+    filters.all.location = e.target.value;
+    renderAll();
+  });
+  bar.querySelector('.filter-sort').addEventListener('change', e => {
+    filters.all.sort = e.target.value;
+    renderAll();
+  });
+}
 
 // ── Card rendering ────────────────────────────────────────────
 function renderCards(slug, rows) {
@@ -159,14 +230,14 @@ function renderAll() {
     });
   });
 
-  all.sort((a, b) => a.ts - b.ts);
+  if (f.sort === 'time-desc') all.sort((a,b) => b.ts - a.ts);
+  else all.sort((a,b) => a.ts - b.ts);
 
   const filtered = all.filter(({ slug, data, ev }) => {
-    if (f.type && slug !== f.type) return false;
+    if (f.types.length && !f.types.includes(slug)) return false;
     if (f.location && !(ev.location || '').toLowerCase().includes(f.location.toLowerCase())) return false;
     if (f.query) {
-      const txt = Object.values(data).join(' ').toLowerCase();
-      if (!txt.includes(f.query.toLowerCase())) return false;
+      if (!Object.values(data).join(' ').toLowerCase().includes(f.query.toLowerCase())) return false;
     }
     return true;
   });
@@ -178,7 +249,7 @@ function renderAll() {
     const label = FORMS[slug].label;
     const lc = ev.level ? ({ low:'#68d391', medium:'#f6c90e', high:'#fc8181' }[ev.level]) : null;
     return `
-      <div class="card all-card" style="border-left: 4px solid ${color}">
+      <div class="card all-card" style="border-left:4px solid ${color}">
         <div class="all-card-type" style="color:${color};background:${color}18">${label}</div>
         <div class="card-header" style="margin-bottom:6px">
           <div class="avatar" style="background:${color}">${(ev.title||'?').slice(0,2).toUpperCase()}</div>
@@ -219,6 +290,8 @@ export async function loadAll() {
   const btn = document.getElementById('refresh-btn');
   btn.disabled = true;
   btn.textContent = '↻ …';
+  document.querySelectorAll('.filter-bar[data-built]').forEach(b => b.removeAttribute('data-built'));
+  filters = freshFilters();
   await Promise.all(Object.keys(FORMS).map(loadForm));
   btn.disabled = false;
   btn.textContent = '↻ Refresh';
@@ -268,14 +341,13 @@ function applyTheme(dark) {
   }
 }
 
-// FIX: was !== 'light' which kept it dark always
 document.getElementById('theme-toggle').addEventListener('click', () => {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'light');
 });
 
 applyTheme(localStorage.getItem('theme') !== 'light');
 
-// ── Boot & loading screen ─────────────────────────────────────
+// ── Boot ──────────────────────────────────────────────────────
 const ls = document.getElementById('loading-screen');
 
 async function boot() {
