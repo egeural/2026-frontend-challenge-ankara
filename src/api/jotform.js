@@ -1,4 +1,4 @@
-const BASE = 'https://api.jotform.com';
+const BASE = '/jotform-api';
 
 function mapAnswers(answers, questions) {
   const out = {};
