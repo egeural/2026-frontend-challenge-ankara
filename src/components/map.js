@@ -4,6 +4,16 @@ import { state } from '../state.js';
 import { extractEvent, buildPopupHtml, parseCoords } from '../utils/events.js';
 import { buildTimeline } from './timeline.js';
 
+const DARK_TILE  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+export function addTileLayer(url = DARK_TILE) {
+  L.tileLayer(url, {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(state.map);
+}
+
 export function focusEvent(key) {
   document.querySelectorAll('.tl-card').forEach(c => c.classList.remove('tl-active'));
   const card = document.getElementById(`tlc-${key}`);
@@ -59,11 +69,8 @@ export function initMap() {
 
   state.map = L.map('map-container', { zoomControl: true }).setView([39.915, 32.855], 14);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap contributors © CARTO',
-    subdomains: 'abcd',
-    maxZoom: 19,
-  }).addTo(state.map);
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  addTileLayer(isDark ? DARK_TILE : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png');
 
   addMarkersToMap();
   buildTimeline();

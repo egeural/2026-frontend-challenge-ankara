@@ -4,7 +4,7 @@ import './styles/main.css';
 import { FORMS } from './config/forms.js';
 import { fetchFormData } from './api/jotform.js';
 import { BUILDERS } from './components/cards.js';
-import { initMap, rebuildMap, focusEvent } from './components/map.js';
+import { initMap, rebuildMap, focusEvent, addTileLayer } from './components/map.js';
 import { state } from './state.js';
 
 // Expose to window for HTML onclick attributes
@@ -12,6 +12,34 @@ window.focusEvent = focusEvent;
 window.switchTab = switchTab;
 window.loadAll = loadAll;
 window.filterCards = filterCards;
+
+// ── Theme toggle ─────────────────────────────────────────────
+const DARK_TILE  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const LIGHT_TILE = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('theme-toggle').textContent = dark ? '🌙' : '☀️';
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+  swapTileLayer(dark ? DARK_TILE : LIGHT_TILE);
+}
+
+function swapTileLayer(url) {
+  if (!state.mapReady || !state.map) return;
+  state.map.eachLayer(layer => {
+    if (layer._url) state.map.removeLayer(layer);
+  });
+  addTileLayer(url);
+}
+
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  applyTheme(!isDark);
+});
+
+// restore saved preference
+const saved = localStorage.getItem('theme');
+applyTheme(saved ? saved === 'dark' : true);
 
 const STAT_IDS  = { checkins: 's-checkins', messages: 's-messages', sightings: 's-sightings', notes: 's-notes', tips: 's-tips' };
 const BADGE_IDS = { checkins: 'b-checkins', messages: 'b-messages', sightings: 'b-sightings', notes: 'b-notes', tips: 'b-tips' };

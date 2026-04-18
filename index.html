@@ -12,7 +12,10 @@
     <div class="logo">Event<span>Intel</span></div>
     <div class="subtitle">Ankara 2026 — Field Data Dashboard</div>
   </div>
-  <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+  <div class="header-actions">
+    <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">🌙</button>
+  </div>
 </header>
 
 <div id="stats-bar">
@@ -88,11 +91,11 @@
         <div id="timeline-header">
           <span class="tl-title">⏱ Event Timeline — click to locate on map</span>
           <div class="tl-legend">
-            <span class="tl-leg-item"><span class="tl-dot" style="background:#4f8ef7"></span>Check-in</span>
-            <span class="tl-leg-item"><span class="tl-dot" style="background:#a78bfa"></span>Message</span>
-            <span class="tl-leg-item"><span class="tl-dot" style="background:#34d399"></span>Sighting</span>
-            <span class="tl-leg-item"><span class="tl-dot" style="background:#6ee7b7"></span>Note</span>
-            <span class="tl-leg-item"><span class="tl-dot" style="background:#f87171"></span>Anon Tip</span>
+            <span class="tl-leg-item"><span class="tl-dot" style="background:#0099FF"></span>Check-in</span>
+            <span class="tl-leg-item"><span class="tl-dot" style="background:#FFB629"></span>Message</span>
+            <span class="tl-leg-item"><span class="tl-dot" style="background:#FF6100"></span>Sighting</span>
+            <span class="tl-leg-item"><span class="tl-dot" style="background:#00c8ff"></span>Note</span>
+            <span class="tl-leg-item"><span class="tl-dot" style="background:#ff3300"></span>Anon Tip</span>
           </div>
         </div>
         <div id="timeline-scroll"></div>
