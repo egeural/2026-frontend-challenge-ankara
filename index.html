@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Event Intelligence — Ankara 2026</title>
+  <link rel="stylesheet" href="/node_modules/leaflet/dist/leaflet.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -234,6 +235,53 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Map pane ── */
+    #pane-map {
+      height: 100%;
+      padding: 0;
+      display: none;
+      flex-direction: column;
+    }
+    #pane-map.active { display: flex; }
+    #map-container {
+      height: calc(100vh - 210px);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    #map-legend {
+      display: flex;
+      gap: 14px;
+      padding: 10px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted);
+    }
+    .legend-dot {
+      width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* override leaflet popup for dark theme */
+    .leaflet-popup-content-wrapper {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .leaflet-popup-tip { background: var(--surface2); }
+    .leaflet-popup-content { margin: 12px 14px; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .popup-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .popup-row { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .popup-row strong { color: var(--text); }
+    .popup-badge {
+      display: inline-block; margin-top: 6px;
+      padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    }
+
     /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -276,6 +324,9 @@
     <button class="tab-btn" onclick="switchTab('tips', this)">
       <span class="icon">🔎</span> Anon Tips <span class="badge" id="b-tips">…</span>
     </button>
+    <button class="tab-btn" onclick="switchTab('map', this)">
+      <span class="icon">🗺</span> Map View
+    </button>
   </aside>
 
   <main>
@@ -312,6 +363,18 @@
         <input class="search-input" placeholder="Search tips…" oninput="filterCards('tips', this.value)" />
       </div>
       <div class="cards" id="cards-tips"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+    </div>
+
+    <div id="pane-map" class="pane">
+      <div id="map-container"></div>
+      <div id="map-legend">
+        <span style="font-size:12px;color:var(--muted);font-weight:600;margin-right:4px">LAYERS:</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#4f8ef7"></span>Check-ins</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#a78bfa"></span>Messages</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#34d399"></span>Sightings</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#6ee7b7"></span>Notes</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f87171"></span>Anon Tips</span>
+      </div>
     </div>
   </main>
 </div>
@@ -552,11 +615,113 @@
     }
   }
 
+  // ── Leaflet map ──────────────────────────────────────────────
+  let leafletMap = null;
+  let mapInitialized = false;
+
+  const FORM_COLORS = {
+    checkins:  '#4f8ef7',
+    messages:  '#a78bfa',
+    sightings: '#34d399',
+    notes:     '#6ee7b7',
+    tips:      '#f87171',
+  };
+
+  function parseCoords(str) {
+    if (!str) return null;
+    const parts = str.split(',').map(s => parseFloat(s.trim()));
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) return parts;
+    return null;
+  }
+
+  function urgencyColor(level) {
+    if (!level) return '';
+    const map = { low: '#68d391', medium: '#f6c90e', high: '#fc8181' };
+    return map[level.toLowerCase()] || '';
+  }
+
+  function buildPopup(slug, data) {
+    const colorMap = { low:'#68d391', medium:'#f6c90e', high:'#fc8181' };
+    let title = '', rows = [], badge = '';
+
+    if (slug === 'checkins') {
+      title = data.personName || data.name || '—';
+      rows = [['Note', data.note], ['Time', data.timestamp], ['Location', data.location]];
+    } else if (slug === 'messages') {
+      const s = data.senderName || data.sender || '—';
+      const r = data.recipientName || data.recipient || '—';
+      title = `${s} → ${r}`;
+      rows = [['Message', data.text || data.message], ['Time', data.timestamp], ['Location', data.location]];
+      const u = (data.urgency||'').toLowerCase();
+      if (u) badge = `<span class="popup-badge" style="background:${colorMap[u]||'#888'}22;color:${colorMap[u]||'#888'}">${u}</span>`;
+    } else if (slug === 'sightings') {
+      title = data.personName || data.person || '—';
+      rows = [['Seen with', data.seenWith], ['Note', data.note], ['Time', data.timestamp], ['Location', data.location]];
+    } else if (slug === 'notes') {
+      title = data.authorName || data.author || '—';
+      const m = Array.isArray(data.mentionedPeople) ? data.mentionedPeople.join(', ') : (data.mentionedPeople || '');
+      rows = [['Note', data.note], ['Mentions', m], ['Time', data.timestamp], ['Location', data.location]];
+    } else if (slug === 'tips') {
+      const a = data.answers || data;
+      title = `Suspect: ${a.suspectName || '—'}`;
+      rows = [['Tip', a.tip], ['Time', a.timestamp], ['Location', a.location]];
+      const c = (a.confidence||'').toLowerCase();
+      if (c) badge = `<span class="popup-badge" style="background:${colorMap[c]||'#888'}22;color:${colorMap[c]||'#888'}">${c} confidence</span>`;
+    }
+
+    const rowsHtml = rows
+      .filter(([, v]) => v)
+      .map(([k, v]) => `<div class="popup-row"><strong>${k}:</strong> ${v}</div>`)
+      .join('');
+
+    return `<div class="popup-title">${title}</div>${rowsHtml}${badge}`;
+  }
+
+  function initMap() {
+    if (mapInitialized) return;
+    mapInitialized = true;
+
+    leafletMap = L.map('map-container', { zoomControl: true }).setView([39.915, 32.855], 13);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap contributors © CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }).addTo(leafletMap);
+
+    Object.keys(FORMS).forEach(slug => {
+      const rows = cache[slug] || [];
+      rows.forEach(data => {
+        const rawCoords = slug === 'tips'
+          ? (data.answers?.coordinates || data.coordinates)
+          : data.coordinates;
+        const coords = parseCoords(rawCoords);
+        if (!coords) return;
+
+        const color = FORM_COLORS[slug];
+        const marker = L.circleMarker(coords, {
+          radius: 8,
+          fillColor: color,
+          color: '#fff',
+          weight: 1.5,
+          opacity: 0.9,
+          fillOpacity: 0.85,
+        }).addTo(leafletMap);
+
+        marker.bindPopup(buildPopup(slug, data), { maxWidth: 280 });
+      });
+    });
+  }
+
   function switchTab(slug, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(`pane-${slug}`).classList.add('active');
+    if (slug === 'map') {
+      if (!mapInitialized) initMap();
+      else leafletMap.invalidateSize();
+    }
   }
 
   async function loadAll() {
@@ -570,5 +735,6 @@
 
   loadAll();
 </script>
+<script src="/node_modules/leaflet/dist/leaflet.js"></script>
 </body>
 </html>
