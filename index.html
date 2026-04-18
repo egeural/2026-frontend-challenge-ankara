@@ -55,6 +55,9 @@
     <button class="tab-btn" onclick="switchTab('tips', this)">
       <span class="icon">🔎</span> Anon Tips <span class="badge" id="b-tips">…</span>
     </button>
+    <button class="tab-btn" onclick="switchTab('all', this)">
+      <span class="icon">📋</span> All Events
+    </button>
     <button class="tab-btn" onclick="switchTab('map', this)">
       <span class="icon">🗺</span> Map View
     </button>
@@ -173,38 +176,34 @@
 
     <!-- ── FORM PANES ── -->
     <div id="pane-checkins" class="pane">
-      <div class="toolbar">
-        <input class="search-input" placeholder="Search check-ins…" oninput="filterCards('checkins', this.value)" />
-      </div>
+      <div id="filter-bar-checkins" class="filter-bar"></div>
       <div class="cards" id="cards-checkins"><div class="loading"><div class="spinner"></div>Loading…</div></div>
     </div>
 
     <div id="pane-messages" class="pane">
-      <div class="toolbar">
-        <input class="search-input" placeholder="Search messages…" oninput="filterCards('messages', this.value)" />
-      </div>
+      <div id="filter-bar-messages" class="filter-bar"></div>
       <div class="cards" id="cards-messages"><div class="loading"><div class="spinner"></div>Loading…</div></div>
     </div>
 
     <div id="pane-sightings" class="pane">
-      <div class="toolbar">
-        <input class="search-input" placeholder="Search sightings…" oninput="filterCards('sightings', this.value)" />
-      </div>
+      <div id="filter-bar-sightings" class="filter-bar"></div>
       <div class="cards" id="cards-sightings"><div class="loading"><div class="spinner"></div>Loading…</div></div>
     </div>
 
     <div id="pane-notes" class="pane">
-      <div class="toolbar">
-        <input class="search-input" placeholder="Search notes…" oninput="filterCards('notes', this.value)" />
-      </div>
+      <div id="filter-bar-notes" class="filter-bar"></div>
       <div class="cards" id="cards-notes"><div class="loading"><div class="spinner"></div>Loading…</div></div>
     </div>
 
     <div id="pane-tips" class="pane">
-      <div class="toolbar">
-        <input class="search-input" placeholder="Search tips…" oninput="filterCards('tips', this.value)" />
-      </div>
+      <div id="filter-bar-tips" class="filter-bar"></div>
       <div class="cards" id="cards-tips"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+    </div>
+
+    <!-- ── ALL EVENTS ── -->
+    <div id="pane-all" class="pane">
+      <div id="filter-bar-all" class="filter-bar"></div>
+      <div class="cards" id="cards-all"><div class="loading"><div class="spinner"></div>Loading…</div></div>
     </div>
 
     <div id="pane-map" class="pane">
@@ -234,6 +233,7 @@
   <button class="mnav-btn" onclick="switchTab('messages', this)" data-tab="messages"><span>💬</span><span>Messages</span></button>
   <button class="mnav-btn" onclick="switchTab('sightings', this)" data-tab="sightings"><span>👁</span><span>Sightings</span></button>
   <button class="mnav-btn" onclick="switchTab('tips', this)" data-tab="tips"><span>🔎</span><span>Tips</span></button>
+  <button class="mnav-btn" onclick="switchTab('all', this)" data-tab="all"><span>📋</span><span>All</span></button>
   <button class="mnav-btn" onclick="switchTab('map', this)" data-tab="map"><span>🗺</span><span>Map</span></button>
 </nav>
 
