@@ -126,12 +126,20 @@
     /* ── Content pane ── */
     main {
       flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pane { display: none; flex: 1; min-height: 0; }
+    .pane.active { display: flex; flex-direction: column; }
+
+    /* non-map panes scroll their own content */
+    .pane:not(#pane-map).active {
       overflow-y: auto;
       padding: 20px 24px;
     }
-
-    .pane { display: none; }
-    .pane.active { display: block; }
 
     /* ── Search / filter bar ── */
     .toolbar {
@@ -243,43 +251,117 @@
       flex-direction: column;
     }
     #pane-map.active { display: flex; }
+
     #map-container {
-      height: calc(100vh - 210px);
-      border-radius: var(--radius);
+      flex: 1;
+      min-height: 0;
+      border-radius: var(--radius) var(--radius) 0 0;
       overflow: hidden;
     }
-    #map-legend {
-      display: flex;
-      gap: 14px;
-      padding: 10px 16px;
+
+    /* ── Timeline strip ── */
+    #timeline-wrap {
+      height: 190px;
+      min-height: 190px;
       background: var(--surface);
       border-top: 1px solid var(--border);
-      flex-wrap: wrap;
+      display: flex;
+      flex-direction: column;
     }
-    .legend-item {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--muted);
+    #timeline-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 14px 5px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
-    .legend-dot {
-      width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+    #timeline-header .tl-title {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted);
     }
+    #timeline-header .tl-legend {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .tl-leg-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; color: var(--muted);
+    }
+    .tl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    #timeline-scroll {
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: hidden;
+      display: flex;
+      align-items: stretch;
+      padding: 10px 14px;
+      gap: 8px;
+    }
+    #timeline-scroll::-webkit-scrollbar { height: 4px; }
+    #timeline-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .tl-card {
+      flex-shrink: 0;
+      width: 170px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 11px;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border-left: 3px solid var(--accent);
+    }
+    .tl-card:hover { border-color: #fff; transform: translateY(-1px); }
+    .tl-card.tl-active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.15); }
+
+    .tl-time {
+      font-size: 18px; font-weight: 800; letter-spacing: -0.5px;
+      line-height: 1;
+    }
+    .tl-type {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px;
+      color: var(--muted); font-weight: 600;
+    }
+    .tl-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tl-desc {
+      font-size: 11px; color: var(--muted);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; line-height: 1.4;
+    }
+    .tl-loc { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
 
     /* override leaflet popup for dark theme */
     .leaflet-popup-content-wrapper {
-      background: var(--surface2);
+      background: #1e2235;
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      min-width: 260px;
     }
-    .leaflet-popup-tip { background: var(--surface2); }
-    .leaflet-popup-content { margin: 12px 14px; font-family: 'Segoe UI', system-ui, sans-serif; }
-    .popup-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
-    .popup-row { font-size: 12px; color: var(--muted); margin-top: 3px; }
-    .popup-row strong { color: var(--text); }
-    .popup-badge {
-      display: inline-block; margin-top: 6px;
-      padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    .leaflet-popup-tip-container { display: none; }
+    .leaflet-popup-content { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .popup-inner { padding: 14px 16px; }
+    .popup-type-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 3px 8px; border-radius: 99px; margin-bottom: 8px;
+    }
+    .popup-title { font-weight: 700; font-size: 16px; margin-bottom: 2px; line-height: 1.2; }
+    .popup-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .popup-divider { height: 1px; background: var(--border); margin: 8px 0; }
+    .popup-body { font-size: 13px; line-height: 1.55; color: #cbd5e0; margin-bottom: 8px; }
+    .popup-meta-grid { display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 11px; }
+    .popup-meta-label { color: var(--muted); white-space: nowrap; }
+    .popup-meta-val { color: var(--text); font-weight: 500; }
+    .popup-level {
+      display: inline-block; margin-top: 8px;
+      padding: 2px 9px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase;
     }
 
     /* ── Scrollbar ── */
@@ -367,13 +449,18 @@
 
     <div id="pane-map" class="pane">
       <div id="map-container"></div>
-      <div id="map-legend">
-        <span style="font-size:12px;color:var(--muted);font-weight:600;margin-right:4px">LAYERS:</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#4f8ef7"></span>Check-ins</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#a78bfa"></span>Messages</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#34d399"></span>Sightings</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#6ee7b7"></span>Notes</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#f87171"></span>Anon Tips</span>
+      <div id="timeline-wrap">
+        <div id="timeline-header">
+          <span class="tl-title">⏱ Event Timeline — click to locate on map</span>
+          <div class="tl-legend">
+            <span class="tl-leg-item"><span class="tl-dot" style="background:#4f8ef7"></span>Check-in</span>
+            <span class="tl-leg-item"><span class="tl-dot" style="background:#a78bfa"></span>Message</span>
+            <span class="tl-leg-item"><span class="tl-dot" style="background:#34d399"></span>Sighting</span>
+            <span class="tl-leg-item"><span class="tl-dot" style="background:#6ee7b7"></span>Note</span>
+            <span class="tl-leg-item"><span class="tl-dot" style="background:#f87171"></span>Anon Tip</span>
+          </div>
+        </div>
+        <div id="timeline-scroll"></div>
       </div>
     </div>
   </main>
@@ -618,6 +705,7 @@
   // ── Leaflet map ──────────────────────────────────────────────
   let leafletMap = null;
   let mapInitialized = false;
+  const markerRefs = {};   // key → { marker, coords, slug, data }
 
   const FORM_COLORS = {
     checkins:  '#4f8ef7',
@@ -626,6 +714,11 @@
     notes:     '#6ee7b7',
     tips:      '#f87171',
   };
+  const FORM_LABELS = {
+    checkins: 'Check-in', messages: 'Message', sightings: 'Sighting',
+    notes: 'Personal Note', tips: 'Anon Tip',
+  };
+  const LEVEL_COLORS = { low:'#68d391', medium:'#f6c90e', high:'#fc8181' };
 
   function parseCoords(str) {
     if (!str) return null;
@@ -634,54 +727,180 @@
     return null;
   }
 
-  function urgencyColor(level) {
-    if (!level) return '';
-    const map = { low: '#68d391', medium: '#f6c90e', high: '#fc8181' };
-    return map[level.toLowerCase()] || '';
+  function parseTimestamp(ts) {
+    if (!ts) return 0;
+    // "DD-MM-YYYY HH:MM"
+    const m = ts.match(/(\d+)-(\d+)-(\d+)\s+(\d+):(\d+)/);
+    if (!m) return 0;
+    return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5]).getTime();
   }
 
-  function buildPopup(slug, data) {
-    const colorMap = { low:'#68d391', medium:'#f6c90e', high:'#fc8181' };
-    let title = '', rows = [], badge = '';
+  function timeHHMM(ts) {
+    if (!ts) return '??:??';
+    const m = ts.match(/(\d+):(\d+)$/);
+    return m ? `${m[1]}:${m[2]}` : ts;
+  }
 
-    if (slug === 'checkins') {
-      title = data.personName || data.name || '—';
-      rows = [['Note', data.note], ['Time', data.timestamp], ['Location', data.location]];
-    } else if (slug === 'messages') {
-      const s = data.senderName || data.sender || '—';
-      const r = data.recipientName || data.recipient || '—';
-      title = `${s} → ${r}`;
-      rows = [['Message', data.text || data.message], ['Time', data.timestamp], ['Location', data.location]];
-      const u = (data.urgency||'').toLowerCase();
-      if (u) badge = `<span class="popup-badge" style="background:${colorMap[u]||'#888'}22;color:${colorMap[u]||'#888'}">${u}</span>`;
-    } else if (slug === 'sightings') {
-      title = data.personName || data.person || '—';
-      rows = [['Seen with', data.seenWith], ['Note', data.note], ['Time', data.timestamp], ['Location', data.location]];
-    } else if (slug === 'notes') {
-      title = data.authorName || data.author || '—';
+  // Returns { title, subtitle, body, location, timestamp, coords, level }
+  function extractEvent(slug, data) {
+    if (slug === 'checkins') return {
+      title: data.personName || '—',
+      subtitle: 'Checked in',
+      body: data.note || '',
+      location: data.location || '',
+      timestamp: data.timestamp || '',
+      coords: data.coordinates || '',
+      level: null,
+    };
+    if (slug === 'messages') return {
+      title: `${data.senderName || '—'} → ${data.recipientName || '—'}`,
+      subtitle: 'Message',
+      body: data.text || data.message || '',
+      location: data.location || '',
+      timestamp: data.timestamp || '',
+      coords: data.coordinates || '',
+      level: (data.urgency || '').toLowerCase(),
+      extra: null,
+    };
+    if (slug === 'sightings') return {
+      title: data.personName || '—',
+      subtitle: `Seen with ${data.seenWith || '—'}`,
+      body: data.note || '',
+      location: data.location || '',
+      timestamp: data.timestamp || '',
+      coords: data.coordinates || '',
+      level: null,
+    };
+    if (slug === 'notes') {
       const m = Array.isArray(data.mentionedPeople) ? data.mentionedPeople.join(', ') : (data.mentionedPeople || '');
-      rows = [['Note', data.note], ['Mentions', m], ['Time', data.timestamp], ['Location', data.location]];
-    } else if (slug === 'tips') {
-      const a = data.answers || data;
-      title = `Suspect: ${a.suspectName || '—'}`;
-      rows = [['Tip', a.tip], ['Time', a.timestamp], ['Location', a.location]];
-      const c = (a.confidence||'').toLowerCase();
-      if (c) badge = `<span class="popup-badge" style="background:${colorMap[c]||'#888'}22;color:${colorMap[c]||'#888'}">${c} confidence</span>`;
+      return {
+        title: data.authorName || '—',
+        subtitle: m ? `Mentions: ${m}` : 'Personal note',
+        body: data.note || '',
+        location: data.location || '',
+        timestamp: data.timestamp || '',
+        coords: data.coordinates || '',
+        level: null,
+      };
     }
+    if (slug === 'tips') return {
+      title: `Suspect: ${data.suspectName || '—'}`,
+      subtitle: 'Anonymous tip',
+      body: data.tip || '',
+      location: data.location || '',
+      timestamp: data.timestamp || '',
+      coords: data.coordinates || '',
+      level: (data.confidence || '').toLowerCase(),
+    };
+    return {};
+  }
 
-    const rowsHtml = rows
-      .filter(([, v]) => v)
-      .map(([k, v]) => `<div class="popup-row"><strong>${k}:</strong> ${v}</div>`)
-      .join('');
+  function buildPopupHtml(slug, ev) {
+    const color = FORM_COLORS[slug];
+    const label = FORM_LABELS[slug];
+    const lc = ev.level ? LEVEL_COLORS[ev.level] || '#888' : null;
 
-    return `<div class="popup-title">${title}</div>${rowsHtml}${badge}`;
+    const metaRows = [
+      ev.timestamp ? `<div class="popup-meta-label">Time</div><div class="popup-meta-val">${ev.timestamp}</div>` : '',
+      ev.location  ? `<div class="popup-meta-label">Location</div><div class="popup-meta-val">${ev.location}</div>` : '',
+      ev.subtitle && !ev.subtitle.startsWith('Checked') && !ev.subtitle.startsWith('Message') && !ev.subtitle.startsWith('Personal')
+        ? `<div class="popup-meta-label">Detail</div><div class="popup-meta-val">${ev.subtitle}</div>` : '',
+    ].filter(Boolean).join('');
+
+    return `<div class="popup-inner">
+      <div class="popup-type-badge" style="background:${color}22;color:${color}">${label}</div>
+      <div class="popup-title">${ev.title}</div>
+      ${ev.subtitle ? `<div class="popup-subtitle">${ev.subtitle}</div>` : ''}
+      ${ev.body ? `<div class="popup-divider"></div><div class="popup-body">${ev.body}</div>` : ''}
+      ${metaRows ? `<div class="popup-divider"></div><div class="popup-meta-grid">${metaRows}</div>` : ''}
+      ${lc ? `<div class="popup-level" style="background:${lc}22;color:${lc}">${ev.level}</div>` : ''}
+    </div>`;
+  }
+
+  // ── Timeline ─────────────────────────────────────────────────
+  function buildTimeline() {
+    const scroll = document.getElementById('timeline-scroll');
+    const allEvents = [];
+
+    Object.keys(FORMS).forEach(slug => {
+      (cache[slug] || []).forEach(data => {
+        const ev = extractEvent(slug, data);
+        if (!ev.coords) return;
+        const key = `${slug}-${data._id}`;
+        allEvents.push({ key, slug, data, ev, ts: parseTimestamp(ev.timestamp) });
+      });
+    });
+
+    allEvents.sort((a, b) => a.ts - b.ts);
+
+    scroll.innerHTML = allEvents.map(({ key, slug, ev }) => {
+      const color = FORM_COLORS[slug];
+      const label = FORM_LABELS[slug];
+      const lc = ev.level ? LEVEL_COLORS[ev.level] || null : null;
+      return `<div class="tl-card" id="tlc-${key}"
+        style="border-left-color:${color}"
+        onclick="focusEvent('${key}')">
+        <div class="tl-time" style="color:${color}">${timeHHMM(ev.timestamp)}</div>
+        <div class="tl-type">${label}</div>
+        <div class="tl-name">${ev.title}</div>
+        <div class="tl-desc">${ev.body || ev.subtitle || ''}</div>
+        <div class="tl-loc">📍 ${ev.location}</div>
+        ${lc ? `<div style="margin-top:4px;display:inline-block;padding:1px 6px;border-radius:99px;font-size:9px;font-weight:700;text-transform:uppercase;background:${lc}22;color:${lc}">${ev.level}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function focusEvent(key) {
+    // Highlight timeline card
+    document.querySelectorAll('.tl-card').forEach(c => c.classList.remove('tl-active'));
+    const card = document.getElementById(`tlc-${key}`);
+    if (card) { card.classList.add('tl-active'); card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+
+    // Pan map and open popup
+    const ref = markerRefs[key];
+    if (ref && leafletMap) {
+      leafletMap.setView(ref.coords, Math.max(leafletMap.getZoom(), 15), { animate: true });
+      setTimeout(() => ref.marker.openPopup(), 300);
+    }
+  }
+
+  function addMarkersToMap() {
+    Object.keys(FORMS).forEach(slug => {
+      (cache[slug] || []).forEach(data => {
+        const ev = extractEvent(slug, data);
+        const coords = parseCoords(ev.coords);
+        if (!coords) return;
+
+        const color = FORM_COLORS[slug];
+        const key = `${slug}-${data._id}`;
+
+        const marker = L.circleMarker(coords, {
+          radius: 9,
+          fillColor: color,
+          color: '#fff',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.9,
+        }).addTo(leafletMap);
+
+        marker.bindPopup(buildPopupHtml(slug, ev), { maxWidth: 300 });
+
+        marker.on('click', () => {
+          document.querySelectorAll('.tl-card').forEach(c => c.classList.remove('tl-active'));
+          const card = document.getElementById(`tlc-${key}`);
+          if (card) { card.classList.add('tl-active'); card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        });
+
+        markerRefs[key] = { marker, coords, slug, data };
+      });
+    });
   }
 
   function initMap() {
     if (mapInitialized) return;
     mapInitialized = true;
 
-    leafletMap = L.map('map-container', { zoomControl: true }).setView([39.915, 32.855], 13);
+    leafletMap = L.map('map-container', { zoomControl: true }).setView([39.915, 32.855], 14);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap contributors © CARTO',
@@ -689,28 +908,8 @@
       maxZoom: 19,
     }).addTo(leafletMap);
 
-    Object.keys(FORMS).forEach(slug => {
-      const rows = cache[slug] || [];
-      rows.forEach(data => {
-        const rawCoords = slug === 'tips'
-          ? (data.answers?.coordinates || data.coordinates)
-          : data.coordinates;
-        const coords = parseCoords(rawCoords);
-        if (!coords) return;
-
-        const color = FORM_COLORS[slug];
-        const marker = L.circleMarker(coords, {
-          radius: 8,
-          fillColor: color,
-          color: '#fff',
-          weight: 1.5,
-          opacity: 0.9,
-          fillOpacity: 0.85,
-        }).addTo(leafletMap);
-
-        marker.bindPopup(buildPopup(slug, data), { maxWidth: 280 });
-      });
-    });
+    addMarkersToMap();
+    buildTimeline();
   }
 
   function switchTab(slug, btn) {
@@ -720,7 +919,10 @@
     document.getElementById(`pane-${slug}`).classList.add('active');
     if (slug === 'map') {
       if (!mapInitialized) initMap();
-      else leafletMap.invalidateSize();
+      else {
+        setTimeout(() => leafletMap.invalidateSize(), 50);
+        if (Object.keys(markerRefs).length === 0) { initMap(); }
+      }
     }
   }
 
@@ -731,6 +933,13 @@
     await Promise.all(Object.keys(FORMS).map(slug => loadForm(slug)));
     btn.disabled = false;
     btn.textContent = '↻ Refresh';
+    // rebuild markers + timeline if map is already open
+    if (mapInitialized) {
+      Object.values(markerRefs).forEach(r => r.marker.remove());
+      Object.keys(markerRefs).forEach(k => delete markerRefs[k]);
+      addMarkersToMap();
+      buildTimeline();
+    }
   }
 
   loadAll();
