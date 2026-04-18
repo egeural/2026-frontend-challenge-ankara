@@ -35,7 +35,7 @@ Start the development server:
 npm run dev
 ```
 
-Then open your browser and navigate to `http://localhost:5173`.
+Then open your browser and navigate to `http://localhost:300x`.
 
 ### Build for Production
 

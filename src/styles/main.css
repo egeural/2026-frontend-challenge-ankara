@@ -132,7 +132,7 @@ header {
   background: var(--navy);
   border-bottom: 3px solid var(--blue);
   padding: 0 20px;
-  height: 68px;
+  height: 100px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -244,7 +244,7 @@ header {
    ════════════════════════════════════════ */
 .layout {
   display: flex;
-  height: calc(100vh - 71px); /* 68px header + 3px border */
+  height: calc(100vh - 93px); /* 90px header + 3px border */
   position: relative;
 }
 
