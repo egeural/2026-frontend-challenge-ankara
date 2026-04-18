@@ -6,6 +6,7 @@ import { fetchFormData } from './api/jotform.js';
 import { BUILDERS } from './components/cards.js';
 import { initMap, rebuildMap, focusEvent, addTileLayer } from './components/map.js';
 import { extractEvent, parseTimestamp, timeHHMM } from './utils/events.js';
+import { buildInvestigationGame } from './utils/investigation.js';
 import { state } from './state.js';
 
 // ── Window exports ─────────────────────────────────────────────
@@ -15,6 +16,11 @@ window.loadAll      = loadAll;
 window.closeSidebar = closeSidebar;
 window.toggleLevel  = toggleLevel;
 window.toggleType   = toggleType;
+window.openInvestigation = openInvestigation;
+window.closeInvestigation = closeInvestigation;
+window.selectSuspect = selectSuspect;
+window.submitSuspectGuess = submitSuspectGuess;
+window.resetInvestigation = resetInvestigation;
 
 // ── ID maps ───────────────────────────────────────────────────
 const STAT_IDS  = { checkins:'s-checkins', messages:'s-messages', sightings:'s-sightings', notes:'s-notes', tips:'s-tips' };
@@ -29,6 +35,7 @@ function freshFilters() {
   return f;
 }
 let filters = freshFilters();
+const investigation = { game: null, selected: '', submitted: false };
 
 // ── Sort helpers ──────────────────────────────────────────────
 function getNameField(slug, r) {
@@ -266,6 +273,141 @@ function renderAll() {
   }).join('');
 }
 
+// ── Investigation quiz ──────────────────────────────────────────
+function refreshInvestigation() {
+  investigation.game = buildInvestigationGame(state.cache);
+  investigation.selected = '';
+  investigation.submitted = false;
+  renderInvestigation();
+}
+
+function openInvestigation() {
+  if (!investigation.game) refreshInvestigation();
+  const modal = document.getElementById('investigation-modal');
+  modal.classList.add('active');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+  renderInvestigation();
+}
+
+function closeInvestigation() {
+  const modal = document.getElementById('investigation-modal');
+  modal.classList.remove('active');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-open');
+}
+
+function selectSuspect(name) {
+  investigation.selected = name;
+  investigation.submitted = false;
+  renderInvestigation();
+}
+
+function submitSuspectGuess() {
+  if (!investigation.selected) return;
+  investigation.submitted = true;
+  renderInvestigation();
+}
+
+function resetInvestigation() {
+  investigation.selected = '';
+  investigation.submitted = false;
+  renderInvestigation();
+}
+
+function renderInvestigation() {
+  const content = document.getElementById('investigation-content');
+  if (!content) return;
+
+  const game = investigation.game;
+  if (!game || !game.topSuspect) {
+    content.innerHTML = `
+      <div class="investigation-head">
+        <div class="investigation-kicker">Investigation mode</div>
+        <h2 id="investigation-title">Who looks suspicious?</h2>
+        <p class="investigation-copy">Load the evidence first, then test your theory against the timeline.</p>
+      </div>
+      <div class="investigation-empty">No suspect analysis is available yet.</div>`;
+    return;
+  }
+
+  if (!investigation.submitted) {
+    const options = game.suspects.map(suspect => `
+      <button
+        class="suspect-option ${investigation.selected === suspect.name ? 'active' : ''}"
+        onclick="selectSuspect(decodeURIComponent('${encodeURIComponent(suspect.name)}'))"
+      >
+        <span class="suspect-option-name">${suspect.name}</span>
+        <span class="suspect-option-meta">${suspect.relatedCount} clues collected</span>
+      </button>
+    `).join('');
+
+    content.innerHTML = `
+      <div class="investigation-head">
+        <div class="investigation-kicker">Investigation mode</div>
+        <h2 id="investigation-title">Who looks most suspicious based on the evidence?</h2>
+        <p class="investigation-copy">Pick a suspect, submit your guess, and compare it against sightings, connections, and timeline overlap with Podo.</p>
+      </div>
+      <div class="suspect-grid">${options}</div>
+      <div class="investigation-actions">
+        <button class="investigation-submit" ${investigation.selected ? '' : 'disabled'} onclick="submitSuspectGuess()">Submit guess</button>
+      </div>`;
+    return;
+  }
+
+  const selected = game.allAnalyses.find(suspect => suspect.name === investigation.selected) || game.topSuspect;
+  const correct = selected.name === game.topSuspect.name;
+  const connections = selected.connections.length
+    ? selected.connections.slice(0, 4).join(', ')
+    : 'No strong named connections';
+  const locations = selected.locations.length
+    ? selected.locations.join(', ')
+    : 'No repeated location pattern';
+  const timelineGap = selected.lastSeenGapMinutes == null
+    ? 'No reliable timeline gap'
+    : `${selected.lastSeenGapMinutes} min before Podo vanished`;
+  const verdict = correct
+    ? `Good pick. ${selected.summary}`
+    : `Not quite. ${selected.summary} ${game.topSuspect.name} has the stronger pattern in the evidence.`;
+
+  content.innerHTML = `
+    <div class="investigation-head">
+      <div class="investigation-kicker">Analysis</div>
+      <h2 id="investigation-title">${correct ? 'Correct lead' : 'Not quite'}</h2>
+      <p class="investigation-copy">${verdict}</p>
+    </div>
+    <div class="investigation-score ${correct ? 'success' : 'warning'}">
+      <span class="investigation-score-label">Suspicion score</span>
+      <strong>${selected.score}%</strong>
+    </div>
+    <div class="investigation-metrics">
+      <div class="investigation-metric">
+        <span>Connections</span>
+        <strong>${selected.connectionsCount}</strong>
+        <small>${connections}</small>
+      </div>
+      <div class="investigation-metric">
+        <span>Sightings with Podo</span>
+        <strong>${selected.sightingsWithPodo}</strong>
+        <small>${selected.relatedCount} total evidence points</small>
+      </div>
+      <div class="investigation-metric">
+        <span>Timeline overlap</span>
+        <strong>${selected.overlaps}</strong>
+        <small>${timelineGap}</small>
+      </div>
+      <div class="investigation-metric">
+        <span>Linked locations</span>
+        <strong>${selected.locationsCount}</strong>
+        <small>${locations}</small>
+      </div>
+    </div>
+    <div class="investigation-actions">
+      <button class="investigation-secondary" onclick="resetInvestigation()">Try another suspect</button>
+      <button class="investigation-submit" onclick="closeInvestigation();switchTab('map', null)">Back to map</button>
+    </div>`;
+}
+
 // ── Data loading ──────────────────────────────────────────────
 async function loadForm(slug) {
   const el = document.getElementById(`cards-${slug}`);
@@ -295,6 +437,7 @@ export async function loadAll() {
   btn.textContent = '↻ Refresh';
   buildAllFilterBar();
   renderAll();
+  refreshInvestigation();
   if (state.mapReady) rebuildMap();
 }
 
@@ -320,6 +463,10 @@ document.getElementById('burger').addEventListener('click', () => {
   document.getElementById('sidebar-overlay').classList.add('active');
 });
 
+document.getElementById('investigation-modal').addEventListener('click', e => {
+  if (e.target.id === 'investigation-modal') closeInvestigation();
+});
+
 export function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('active');
@@ -341,6 +488,10 @@ function applyTheme(dark) {
 
 document.getElementById('theme-toggle').addEventListener('click', () => {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'light');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeInvestigation();
 });
 
 applyTheme(localStorage.getItem('theme') !== 'light');

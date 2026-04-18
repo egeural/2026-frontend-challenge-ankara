@@ -124,6 +124,15 @@
           </div>
         </div>
 
+        <div id="db-investigation">
+          <div>
+            <div class="db-investigation-kicker">Wrap-up interaction</div>
+            <div class="db-investigation-title">Test your theory</div>
+            <p class="db-investigation-copy">Choose the suspect that best matches the timeline, sightings, and anonymous tips, then see how strong your case really is.</p>
+          </div>
+          <button class="investigation-trigger" onclick="openInvestigation()">Start Investigation Quiz</button>
+        </div>
+
         <!-- Nav cards -->
         <div id="db-label">Investigate the Evidence</div>
         <div id="db-cards">
@@ -218,6 +227,7 @@
             <span class="tl-leg-item"><span class="tl-dot" style="background:#00c8ff"></span>Note</span>
             <span class="tl-leg-item"><span class="tl-dot" style="background:#ff3300"></span>Anon Tip</span>
           </div>
+          <button class="timeline-investigation-btn" onclick="openInvestigation()">Test your theory</button>
         </div>
         <div id="timeline-scroll"></div>
       </div>
@@ -236,6 +246,13 @@
   <button class="mnav-btn" onclick="switchTab('all', this)" data-tab="all"><span>📋</span><span>All</span></button>
   <button class="mnav-btn" onclick="switchTab('map', this)" data-tab="map"><span>🗺</span><span>Map</span></button>
 </nav>
+
+<div id="investigation-modal" class="investigation-modal" aria-hidden="true">
+  <div class="investigation-panel" role="dialog" aria-modal="true" aria-labelledby="investigation-title">
+    <button class="investigation-close" onclick="closeInvestigation()" aria-label="Close investigation quiz">×</button>
+    <div id="investigation-content"></div>
+  </div>
+</div>
 
 <script type="module" src="/src/main.js"></script>
 </body>
