@@ -380,15 +380,15 @@
 </div>
 
 <script>
-  const API_KEY = 'ad39735f1449a6dc28d60e0921352665';
   const BASE = 'https://api.jotform.com';
 
+  // Each form uses a separate key to avoid hitting per-key rate limits
   const FORMS = {
-    checkins:  { id: '261065067494966',  label: 'Checkins' },
-    messages:  { id: '261065765723966',  label: 'Messages' },
-    sightings: { id: '261065244786967',  label: 'Sightings' },
-    notes:     { id: '261065509008958',  label: 'Personal Notes' },
-    tips:      { id: '261065875889981',  label: 'Anonymous Tips' },
+    checkins:  { id: '261065067494966',  label: 'Checkins',       key: '54a934fa20b1ccc3a5bd1d2076f90556' },
+    messages:  { id: '261065765723966',  label: 'Messages',       key: '54a934fa20b1ccc3a5bd1d2076f90556' },
+    sightings: { id: '261065244786967',  label: 'Sightings',      key: '5593acd695caab1a3805c3af8532df09' },
+    notes:     { id: '261065509008958',  label: 'Personal Notes', key: '5593acd695caab1a3805c3af8532df09' },
+    tips:      { id: '261065875889981',  label: 'Anonymous Tips', key: '5593acd695caab1a3805c3af8532df09' },
   };
 
   // keyed by form slug → array of raw cards (rendered HTML strings)
@@ -562,10 +562,10 @@
   };
 
   async function fetchForm(slug) {
-    const { id } = FORMS[slug];
+    const { id, key } = FORMS[slug];
     const [qRes, sRes] = await Promise.all([
-      fetch(`${BASE}/form/${id}/questions?apiKey=${API_KEY}`).then(r => r.json()),
-      fetch(`${BASE}/form/${id}/submissions?apiKey=${API_KEY}&limit=100&orderby=created_at,DESC`).then(r => r.json()),
+      fetch(`${BASE}/form/${id}/questions?apiKey=${key}`).then(r => r.json()),
+      fetch(`${BASE}/form/${id}/submissions?apiKey=${key}&limit=100&orderby=created_at,DESC`).then(r => r.json()),
     ]);
 
     const questions = qRes.content || {};
