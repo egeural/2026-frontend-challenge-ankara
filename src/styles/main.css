@@ -700,8 +700,8 @@ main {
 
 /* ── Timeline strip ── */
 #timeline-wrap {
-  height: 185px;
-  min-height: 185px;
+  height: 260px;
+  min-height: 260px;
   background: var(--surface);
   border-top: 2px solid var(--blue);
   display: flex;
@@ -735,11 +735,11 @@ main {
 #timeline-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .tl-card {
   flex-shrink: 0;
-  width: 160px;
+  width: 190px;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   cursor: pointer;
   transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
   display: flex;
@@ -749,11 +749,11 @@ main {
 }
 .tl-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,153,255,0.2); }
 .tl-card.tl-active { border-color: var(--gold); border-left-color: var(--gold); box-shadow: 0 0 0 2px rgba(255,182,41,0.3); }
-.tl-time { font-size: 17px; font-weight: 900; letter-spacing: -0.5px; line-height: 1; }
-.tl-type { font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 700; }
-.tl-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tl-desc { font-size: 11px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
-.tl-loc { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
+.tl-time { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; line-height: 1; }
+.tl-type { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 700; }
+.tl-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-desc { font-size: 12px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+.tl-loc { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
 
 /* ── Leaflet popup overrides ── */
 .leaflet-popup-content-wrapper {
@@ -1034,7 +1034,7 @@ main {
   #mobile-nav { display: flex; }
 
   /* Map timeline: shorter on mobile */
-  #timeline-wrap { height: 155px; min-height: 155px; }
+  #timeline-wrap { height: 210px; min-height: 210px; }
   .tl-legend { display: none; }
   .tl-card { width: 140px; }
   .timeline-investigation-btn { width: 100%; }
@@ -1052,7 +1052,7 @@ main {
 @media (max-width: 480px) {
   .logo { font-size: 16px; }
   .brand-logo { width: 38px; height: 38px; }
-  #timeline-wrap { height: 140px; min-height: 140px; }
+  #timeline-wrap { height: 190px; min-height: 190px; }
   .tl-card { width: 130px; }
   #db-cards { grid-template-columns: 1fr; }
   #db-name { font-size: 40px; }
